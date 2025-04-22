@@ -1,0 +1,28 @@
+env: "dev"
+
+app:
+  handler_timeout: "3s"
+  refresh_token_life: "720h"
+  access_token_life: "30m"
+
+http_server:
+  port: 8080
+  read_timeout: "5s"
+  write_timeout: "5s"
+  idle_timeout: "60s"
+
+grpc_audit_client:
+  host: "172.16.153.10"
+  port: 9000
+  timeout: "3s"
+  cert_path: "/etc/ssl/grpc/ca.crt"
+
+db_conn:
+  host: "172.16.153.15"
+  port: 5432
+  name: "med_service"
+  sslmode: "verify-ca"
+  sslrootcert: "/etc/ssl/postgres/ca.crt"
+  max_open_conns: 80
+  max_idle_conns: 10
+  conn_max_lifetime: "5m"
