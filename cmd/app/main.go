@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	grpcclient "hippo/internal/transport/grpc"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	grpcclient "hippo/internal/transport/grpc"
 
 	"hippo/internal/platform/config"
 	"hippo/internal/platform/database"
