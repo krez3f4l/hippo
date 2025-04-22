@@ -14,7 +14,7 @@ http_server:
 grpc_audit_client:
   host: "172.16.153.10"
   port: 9000
-  timeout: "3s"
+  timeout: "5s"
   cert_path: "/etc/ssl/grpc/ca.crt"
 
 db_conn:

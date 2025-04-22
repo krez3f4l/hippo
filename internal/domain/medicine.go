@@ -2,7 +2,7 @@ package domain
 
 type Medicine struct {
 	ID               int    `json:"id"`
-	GlobalID         string `json:"global_id"`
+	NDC              string `json:"ndc"`
 	Name             string `json:"name"`
 	Dosage           string `json:"dosage"`
 	Form             string `json:"form"`
@@ -11,7 +11,7 @@ type Medicine struct {
 }
 
 type UpdateMedicine struct {
-	GlobalID         *string `json:"global_id"`
+	NDC              *string `json:"ndc"`
 	Name             *string `json:"name"`
 	Dosage           *string `json:"dosage"`
 	Form             *string `json:"form"`

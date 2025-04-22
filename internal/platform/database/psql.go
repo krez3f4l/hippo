@@ -14,7 +14,7 @@ const (
 	sslModeVerifyCA   = "verify-ca"
 	driverName        = "postgres"
 
-	timeoutPing = 2 * time.Second
+	timeoutPing = 3 * time.Second
 )
 
 func NewPostgresConnection(conn config.DBConn) (*sql.DB, error) {

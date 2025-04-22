@@ -9,14 +9,14 @@ type ValidationError struct {
 	Message string
 }
 
-func NewValidationError(field, msg string) ValidationError {
-	return ValidationError{
+func NewValidationError(field, msg string) error {
+	return &ValidationError{
 		Field:   field,
 		Message: msg,
 	}
 }
 
-func (e ValidationError) Error() string {
+func (e *ValidationError) Error() string {
 	return fmt.Sprintf("validation failed for field '%s': %s", e.Field, e.Message)
 }
 
@@ -26,26 +26,28 @@ type NotFoundError struct {
 	Cause  error
 }
 
-func NewNotFoundError(entity string, id interface{}, err error) NotFoundError {
-	return NotFoundError{
+func NewNotFoundError(entity string, id interface{}, err error) error {
+	return &NotFoundError{
 		Entity: entity,
 		ID:     id,
 		Cause:  err,
 	}
 }
 
-func (e NotFoundError) Error() string {
+func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("%v", e.Cause)
 }
 
-type ErrDuplicateEmail struct{}
-
-func NewErrDuplicateEmail() error {
-	return ErrDuplicateEmail{}
+type ErrDuplicateEmail struct {
+	Cause error
 }
 
-func (e ErrDuplicateEmail) Error() string {
-	return fmt.Sprintf("duplicated email")
+func NewErrDuplicateEmail(cause error) error {
+	return &ErrDuplicateEmail{cause}
+}
+
+func (e *ErrDuplicateEmail) Error() string {
+	return fmt.Sprintf("email already exists: %s", e.Cause)
 }
 
 type ErrInvalidCredential struct {
@@ -53,19 +55,19 @@ type ErrInvalidCredential struct {
 }
 
 func NewErrInvalidCredential(err error) error {
-	return ErrInvalidCredential{Cause: err}
+	return &ErrInvalidCredential{Cause: err}
 }
 
-func (e ErrInvalidCredential) Error() string {
+func (e *ErrInvalidCredential) Error() string {
 	return fmt.Sprintf("invalid credential")
 }
 
 type ErrRefreshTokenExpired struct{}
 
 func NewErrRefreshTokenExpired() error {
-	return ErrRefreshTokenExpired{}
+	return &ErrRefreshTokenExpired{}
 }
 
-func (e ErrRefreshTokenExpired) Error() string {
+func (e *ErrRefreshTokenExpired) Error() string {
 	return fmt.Sprintf("refresh token expired")
 }

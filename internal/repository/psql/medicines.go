@@ -24,15 +24,15 @@ func NewMedicines(db *sql.DB) *Medicines {
 func (m *Medicines) Create(ctx context.Context, medicine domain.Medicine) (int64, error) {
 	const op = "repository.psql.medicines.Create"
 	const query = `
-		INSERT INTO medicine 
-			(global_id, name, dosage, form, active_ingredient, pharma_company) 
+		INSERT INTO medicines 
+			(ndc, name, dosage, form, active_ingredient, pharma_company) 
 		VALUES ($1, $2, $3, $4, $5, $6) 
 		RETURNING id
 	`
 
 	var id int64
 	err := m.db.QueryRowContext(ctx, query,
-		medicine.GlobalID,
+		medicine.NDC,
 		medicine.Name,
 		medicine.Dosage,
 		medicine.Form,
@@ -51,8 +51,8 @@ func (m *Medicines) GetAll(ctx context.Context) ([]domain.Medicine, error) {
 	const op = "repository.psql.medicines.GetAll"
 	const query = `
 		SELECT 
-			id, global_id, name, dosage, form, active_ingredient, pharma_company 
-		FROM medicine
+			id, ndc, name, dosage, form, active_ingredient, pharma_company 
+		FROM medicines
 	`
 
 	rows, err := m.db.QueryContext(ctx, query)
@@ -66,7 +66,7 @@ func (m *Medicines) GetAll(ctx context.Context) ([]domain.Medicine, error) {
 		var medicine domain.Medicine
 		if err = rows.Scan(
 			&medicine.ID,
-			&medicine.GlobalID,
+			&medicine.NDC,
 			&medicine.Name,
 			&medicine.Dosage,
 			&medicine.Form,
@@ -89,15 +89,15 @@ func (m *Medicines) GetByID(ctx context.Context, id int64) (domain.Medicine, err
 	const op = "repository.psql.medicines.GetByID"
 	const query = `
 		SELECT 
-			id, global_id, name, dosage, form, active_ingredient, pharma_company 
-		FROM medicine 
+			id, ndc, name, dosage, form, active_ingredient, pharma_company 
+		FROM medicines 
 		WHERE id = $1
 	`
 
 	var medicine domain.Medicine
 	err := m.db.QueryRowContext(ctx, query, id).Scan(
 		&medicine.ID,
-		&medicine.GlobalID,
+		&medicine.NDC,
 		&medicine.Name,
 		&medicine.Dosage,
 		&medicine.Form,
@@ -123,9 +123,9 @@ func (m *Medicines) Update(ctx context.Context, id int64, upd domain.UpdateMedic
 		argID     = 1
 	)
 
-	if upd.GlobalID != nil {
-		setValues = append(setValues, fmt.Sprintf("global_id = $%d", argID))
-		args = append(args, *upd.GlobalID)
+	if upd.NDC != nil {
+		setValues = append(setValues, fmt.Sprintf("ndc = $%d", argID))
+		args = append(args, *upd.NDC)
 		argID += 1
 	}
 
@@ -165,7 +165,7 @@ func (m *Medicines) Update(ctx context.Context, id int64, upd domain.UpdateMedic
 
 	args = append(args, id)
 	query := fmt.Sprintf(
-		"UPDATE medicine SET %s WHERE id = $%d",
+		"UPDATE medicines SET %s WHERE id = $%d",
 		strings.Join(setValues, ", "),
 		argID,
 	)
@@ -189,7 +189,7 @@ func (m *Medicines) Update(ctx context.Context, id int64, upd domain.UpdateMedic
 func (m *Medicines) Delete(ctx context.Context, id int64) error {
 	const op = "repository.psql.medicines.Delete"
 
-	result, err := m.db.ExecContext(ctx, "DELETE FROM medicine WHERE id = $1", id)
+	result, err := m.db.ExecContext(ctx, "DELETE FROM medicines WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("%s: failed to delete medicine: %w", op, err)
 	}

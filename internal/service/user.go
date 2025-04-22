@@ -18,11 +18,12 @@ import (
 
 type PasswordHasher interface {
 	Hash(password string) (string, error)
+	Compare(hash, pwd string) error
 }
 
 type UsersRepository interface {
 	Create(ctx context.Context, user domain.User) error
-	GetByCredentials(ctx context.Context, email, password string) (domain.User, error)
+	GetByEmail(ctx context.Context, email string) (domain.User, error)
 }
 
 type SessionRepository interface {
@@ -80,10 +81,14 @@ func (s *Users) SignUp(ctx context.Context, sInfo domain.SignUpInfo) (int64, err
 	}
 
 	if err = s.repo.Create(ctx, user); err != nil {
+		var duplicateEmail *repository.ErrDuplicateEmail
+		if errors.As(err, &duplicateEmail) {
+			return -1, NewErrDuplicateEmail(err)
+		}
 		return -1, err
 	}
 
-	user, err = s.repo.GetByCredentials(ctx, sInfo.Email, password)
+	user, err = s.repo.GetByEmail(ctx, sInfo.Email)
 	if err != nil {
 		return -1, err
 	}
@@ -94,18 +99,17 @@ func (s *Users) SignUp(ctx context.Context, sInfo domain.SignUpInfo) (int64, err
 }
 
 func (s *Users) SignIn(ctx context.Context, sInfo domain.SignInInfo) (string, string, error) {
-	password, err := s.hasher.Hash(sInfo.Password)
-	if err != nil {
-		return "", "", err
-	}
-
-	user, err := s.repo.GetByCredentials(ctx, sInfo.Email, password)
+	user, err := s.repo.GetByEmail(ctx, sInfo.Email)
 	if err != nil {
 		var invalidCred *repository.ErrInvalidCredential
 		if errors.As(err, &invalidCred) {
 			return "", "", NewErrInvalidCredential(err)
 		}
 		return "", "", err
+	}
+
+	if err = s.hasher.Compare(user.Password, sInfo.Password); err != nil {
+		return "", "", NewErrInvalidCredential(err)
 	}
 
 	accessToken, refreshToken, err := s.generateTokens(ctx, user.ID)

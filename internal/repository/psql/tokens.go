@@ -21,7 +21,7 @@ func NewToken(db *sql.DB) *Token {
 }
 
 func (t *Token) Create(ctx context.Context, token domain.RefreshSession) error {
-	const op = "psql.tokens.Create"
+	const op = "psql.refresh_tokens.Create"
 
 	query := `
 		INSERT INTO refresh_tokens (user_id, token, expires_at)
@@ -37,7 +37,7 @@ func (t *Token) Create(ctx context.Context, token domain.RefreshSession) error {
 }
 
 func (t *Token) Get(ctx context.Context, token string) (domain.RefreshSession, error) {
-	const op = "psql.tokens.Get"
+	const op = "psql.refresh_tokens.Get"
 
 	tx, err := t.db.BeginTx(ctx, nil)
 	if err != nil {

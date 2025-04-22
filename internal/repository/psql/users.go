@@ -35,27 +35,27 @@ func (r *Users) Create(ctx context.Context, user domain.User) error {
 		user.CreatedAt,
 	).Scan(&id)
 
-	if err != nil {
-		return fmt.Errorf("%s: failed to create user: %w", op, err)
+	if errors.Is(err, sql.ErrNoRows) {
+		return repository.NewErrDuplicateEmail(err)
 	}
 
-	if id == 0 {
-		return repository.NewErrDuplicateEmail()
+	if err != nil {
+		return fmt.Errorf("%s: failed to create user: %w", op, err)
 	}
 
 	return nil
 }
 
-func (r *Users) GetByCredentials(ctx context.Context, email, password string) (domain.User, error) {
-	const op = "repository.psql.users.GetByCredentials"
+func (r *Users) GetByEmail(ctx context.Context, email string) (domain.User, error) {
+	const op = "repository.psql.users.GetByEmail"
 	const query = `
 		SELECT id, name, email, password, registered_at 
-		FROM users 
-		WHERE email = $1 AND password = $2
+		FROM users
+		WHERE email = $1
 	`
 
 	var user domain.User
-	err := r.db.QueryRowContext(ctx, query, email, password).Scan(
+	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,

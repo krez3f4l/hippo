@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"regexp"
 	"time"
 
 	//my 2nd github acc :)
@@ -21,10 +22,14 @@ type MedicationDataRepository interface {
 	Delete(ctx context.Context, id int64) error
 }
 
+const ndcPattern = `^\d{5}-\d{4}-\d{2}$`
+
 type Medicines struct {
 	repo        MedicationDataRepository
 	auditClient AuditClient
 	log         logger.Logger
+
+	ndcMask *regexp.Regexp
 }
 
 func NewMedicines(repo MedicationDataRepository, auditClient AuditClient, log logger.Logger) *Medicines {
@@ -32,16 +37,19 @@ func NewMedicines(repo MedicationDataRepository, auditClient AuditClient, log lo
 		repo:        repo,
 		auditClient: auditClient,
 		log:         log,
+		ndcMask:     regexp.MustCompile(ndcPattern),
 	}
 }
 
 func (m *Medicines) Create(ctx context.Context, medicament domain.Medicine) (int64, error) {
 	/// TODO  business logic
+	// TODO merge and take out the logic if it becomes large
 	if medicament.Name == "" {
-		return -1, ValidationError{
-			Field:   "name",
-			Message: "cannot be empty",
-		}
+		return -1, NewValidationError("name", "cannot be empty")
+	}
+
+	if !m.ndcMask.MatchString(medicament.NDC) {
+		return -1, NewValidationError("ndc", "invalid NDC format")
 	}
 
 	id, err := m.repo.Create(ctx, medicament)
@@ -81,6 +89,12 @@ func (m *Medicines) GetByID(ctx context.Context, id int64) (domain.Medicine, err
 }
 
 func (m *Medicines) Update(ctx context.Context, id int64, med domain.UpdateMedicine) error {
+	if med.NDC != nil {
+		if !m.ndcMask.MatchString(*med.NDC) {
+			return NewValidationError("ndc", "invalid NDC format")
+		}
+	}
+
 	err := m.repo.Update(ctx, id, med)
 	if err != nil {
 		var repoNotFound *repository.NotFoundError

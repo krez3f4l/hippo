@@ -46,6 +46,16 @@ func (h *Handler) handleSignUp(w http.ResponseWriter, r *http.Request) {
 	id, err := h.usersService.SignUp(ctx, sInfo)
 	if err != nil {
 		h.logError(op, err)
+
+		var duplicateEmail *service.ErrDuplicateEmail
+		if errors.As(err, &duplicateEmail) {
+			h.respondWithJSON(w, http.StatusConflict, op, ErrorResponse{
+				Code:    "duplicate_email",
+				Message: "User with provided email already exists.",
+			})
+			return
+		}
+
 		h.respondWithJSON(w, http.StatusInternalServerError, op, ErrorResponse{
 			Code:    "internal_error",
 			Message: "Failed to create user",
@@ -111,8 +121,6 @@ func (h *Handler) handleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]string{"token": accessToken}
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh-token",
 		Value:    refreshToken,
@@ -122,7 +130,9 @@ func (h *Handler) handleSignIn(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	h.respondWithJSON(w, http.StatusOK, op, response)
+	h.respondWithJSON(w, http.StatusOK, op, map[string]string{
+		"access_token": accessToken,
+	})
 }
 
 func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request) {

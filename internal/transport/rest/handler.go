@@ -79,7 +79,7 @@ func (h *Handler) InitRouter() *mux.Router {
 }
 
 func (h *Handler) logError(handlerName string, err error) {
-	h.log.Error("gRPC audit server connection established",
+	h.log.Error("request failed",
 		logger.Err(err),
 		logger.String("handler", handlerName),
 	)
